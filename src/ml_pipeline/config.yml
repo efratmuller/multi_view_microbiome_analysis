@@ -1,0 +1,112 @@
+default:
+  log_level: 'DEBUG'                                      # Optional values: TRACE, DEBUG, INFO, WARN...
+  outer_n_folds: 5
+  outer_n_repeats: 10                                     # Number of CV repetitions
+  tuning_n_folds: 10
+  tuning_n_repeats: 2
+  use_tune_grid: false                                    # If true, uses grid-search for hyperparameter tuning. Otherwise uses Bayes
+  cluster_type: 'clustering99'                            # Can also be: "none"
+  params_combo: {
+    'should_tune': [false],
+    'fs_type': ['none', 'Boruta90', 'Boruta80', 'utest'],
+    'feature_set_type': ['T','G','P','M','T+G','T+P','T+M','T+G+M','T+P+M','T+G+P+M']
+  }
+  disease_labels: ['ASD', 'CD', 'CDI', 'nonCDI', 'CIRR', 'CRC', 'EDD', 'HIV',
+    'MHE', 'NASH', 'OB', 'PAR', 'PSA', 'RA', 'T1D', 'T2D', 'UC',
+    'Carcinoma', 'Adenoma', 'hypertension', 'adenoma', 'IGT',
+    'ME/CFS', 'T2D', 'cirrhosis', 'IBD', 'migraine', 'ESRD',
+    'otitis', 'pre-hypertension', 'schizofrenia', 'STH']
+  shotgun_datasets_not_in_CMD: ['esrd_wang_2020','cd_franzosa_2019','uc_franzosa_2019']
+  unknown_taxa: ['(UG)']  # features that will be removed in the preprocessing
+  allow_plot_without_cairo: false
+  paths: {
+    'ml_input_dir': '../../data/ml_input',
+    'ml_output_dir': '../../data/ml_output',
+    'results_tables_dir': '../../data/ml_output/results_tables_new_feature_sets',
+    'graphs_dir': '../../data/ml_output/graphs',
+    'logs_dir': '../../data/ml_output/logs',
+    'metacyc_pathways_names': '../../db/metacyc/metacyc_pathways_names.tsv',
+    'kegg_metabolites_names': '../../db/kegg/kegg_metabolites_names.tsv',
+    'metacyc_pathways_hierarchy': '../../db/metacyc/metacyc_pathway_db.txt',
+    'curatedMetagenomicData_study_list': '../../config/curatedMetagenomicData/studies_and_groups_to_include.csv',
+    'combined_cv_results': '../../data/ml_output/results_tables_new_feature_sets/cv_results_all_datasets.csv',
+    'combined_feature_importance': '../../data/ml_output/results_tables_new_feature_sets/feature_importance_all_datasets.tsv',
+    'results_rdata': '../../data/ml_output/results_tables_new_feature_sets/results_for_analysis.RData',
+    'contributors_list': '../../data/ml_output/results_tables_new_feature_sets/contributors_list.tsv'
+  }
+  paths_templates: {
+    'metadata': '../../data/ml_input/%s/metadata.tsv',
+    'taxonomy': '../../data/ml_input/%s/taxonomy.tsv',
+    'pathways': '../../data/ml_input/%s/pathways.tsv',
+    'metabolites': '../../data/ml_input/%s/cmp_metabolites_kegg2021.tsv',
+    'metagenome': '../../data/ml_input/%s/KO_metagenome_unstrat.tsv',
+    'graph': '../../data/ml_output/graphs/%s.png',
+    'log': '../../data/ml_output/logs/%s_ml_pipeline.log',
+    'clusters': '../../data/ml_output/results_tables_new_feature_sets/%s_clusters.csv',
+    'feature_importance_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_feature_importance.csv',
+    'cv_results_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_pipeline.csv',
+    'cross_ds_dir': '../../data/ml_output/results_tables/cross_%s',  # group_name
+    'cross_results_csv': '../../data/ml_output/results_tables/cross_%s/%s___%s__results.csv',  # group, train, test
+    'cross_clusters': '../../data/ml_output/results_tables/cross_%s/%s___%s__clusters.csv', # group, train, test
+    'cross_feature_importance_csv': '../../data/ml_output/results_tables/cross_%s/%s___%s__feature_importance.csv' # group, train, test
+  }
+  params_short_names: {
+    'should_tune': {'FALSE': '-T', 'TRUE': '+T'},
+    'fs_type': {'none': '-FS', 'Boruta90': '+FS_B90', 'Boruta80': '+FS_B80', 'utest': '+FS_U', 'contribsOnly': '+FS_CONTRIB'},
+    'feature_set_type': {'T': 'T','G': 'G','P': 'P','M': 'M','T+G': 'T+G','T+P': 'T+P','T+M': 'T+M','T+G+M': 'T+G+M','T+P+M': 'T+P+M','T+G+P+M': 'T+G+P+M'}
+  }
+  cross_test: {
+  # All the datasets under "train" will be trained and tested against each other.
+  # Datasets under "additional_test" will not be trained, only tested with trained
+  # models from "train" datasets.
+  'crc': {'train': ['crc_feng_2015',
+                    'crc_thomas_2019_c',
+                    'crc_vogtmann_2016',
+                    'crc_wirbel_2018',
+                    'crc_yachida_2019',
+                    'crc_yu_2015',
+                    'crc_zeller_2014'
+            ],'additional_test': []},
+  'adenoma': {'train': ['adenomas_feng_2015',
+                        'adenoma_yachida_2019',
+                        'adenoma_zeller_2014'
+            ],'additional_test': []},
+  'crc_adenoma': {'train': ['crc_feng_2015',
+                            'crc_thomas_2019_c',
+                            'crc_vogtmann_2016',
+                            'crc_wirbel_2018',
+                            'crc_yachida_2019',
+                            'crc_yu_2015',
+                            'crc_zeller_2014',
+                            'adenomas_feng_2015',
+                            'adenoma_yachida_2019',
+                            'adenoma_zeller_2014'
+            ],'additional_test': []},
+  't2d': {'train': ['t2d_karlsson_2013',
+                    't2d_qin_2012'
+      ],'additional_test': []}
+  }
+
+
+contributors:
+  outer_n_repeats: 3
+  params_combo: {
+    'should_tune': [false],
+    'fs_type': ['contribsOnly'],
+    'feature_set_type': ['T','G','P','M','T+G','T+M','T+G+P+M']
+  }
+  paths_templates: {
+    'log': '../../data/ml_output/logs/%s_ml_pipeline_contribs_only.log',
+    'clusters': '../../data/ml_output/results_tables_new_feature_sets/%s_clusters_contribs_only_REDUNDANT.csv',
+    'feature_importance_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_contribs_only_feature_importance.csv',
+    'cv_results_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_contribs_only_pipeline.csv'
+  }
+  
+test:
+  outer_n_repeats: 3
+  outer_n_folds: 5
+  params_combo: {
+    'should_tune': [false],
+    'fs_type': ['Boruta90'],
+    'feature_set_type': ['T','G','P','M','T+G','T+M','T+G+P+M']
+  }
