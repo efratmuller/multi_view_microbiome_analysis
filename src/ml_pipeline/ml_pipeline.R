@@ -66,25 +66,6 @@ ml_create_rf_model <- function(run_name,
         )
     }
     
-    # # Graph the tuning params
-    # plot <- tune_res %>%
-    #   collect_metrics() %>%
-    #   filter(.metric == "roc_auc") %>%
-    #   select(mean, min_n, mtry) %>%
-    #   pivot_longer(min_n:mtry,
-    #                values_to = "value",
-    #                names_to = "parameter") %>%
-    #   ggplot(aes(value, mean, color = parameter)) +
-    #   geom_point(show.legend = FALSE) +
-    #   facet_wrap( ~ parameter, scales = "free_x") +
-    #   labs(x = NULL, y = "AUC")
-    # utils_save_plot(
-    #   plot,
-    #   sprintf('%s - Hyperparameters', run_name),
-    #   width = 600,
-    #   height = 300
-    # )
-    
     # Finalize the model and evaluate results
     best_auc <- select_best(tune_res, "roc_auc")
     logs[['mean_inner_cv_auc_best_tuning_params']] <-
@@ -151,23 +132,21 @@ ml_evaluate_test <- function(run_name,
   logs = list()
   
   set.seed(666)
-  # this will automatically bake since the recipe is in the workflow
+  
+  # Will automatically bake since the recipe is in the workflow
   final_result <-
     predict(fitted_wf, new_data = test_df, type = 'prob') %>%
     bind_cols(test_df)
   
   out_of_fold_test_auc <- final_result %>%
     roc_auc(DiseaseState, .pred_disease)
+  
   logs[['out_of_fold_test_auc']] <- out_of_fold_test_auc$.estimate
   
-  plot <- final_result %>%
-    roc_curve(DiseaseState, .pred_disease) %>%
-    autoplot() +
-    ggtitle(sprintf('%s - ROC curve', run_name))
-  utils_save_plot(plot,
-                  sprintf('%s - ROC curve', run_name),
-                  width = 400,
-                  height = 400)
+  # plot <- final_result %>%
+  #   roc_curve(DiseaseState, .pred_disease) %>%
+  #   autoplot() +
+  #   ggtitle(sprintf('%s - ROC curve', run_name))
   
   return(list(logs = logs))
 }

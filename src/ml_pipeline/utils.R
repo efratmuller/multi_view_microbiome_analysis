@@ -19,19 +19,6 @@ utils_create_output_dirs <- function() {
   dir.create(config::get('paths')$ml_output_dir, showWarnings = FALSE)
   dir.create(config::get('paths')$logs_dir, showWarnings = FALSE)
   dir.create(config::get('paths')$results_tables_dir, showWarnings = FALSE)
-  dir.create(config::get('paths')$graphs_dir, showWarnings = FALSE)
-}
-
-
-utils_save_plot <- function(plot, title, width, height, res = 100) {
-  if (!config::get('allow_plot_without_cairo') && capabilities()[['cairo']] == FALSE) {
-    log_warn('Cairo capability is not installed, either install or enable "allow_plot_without_cairo" in config.')
-    return()
-  }
-  file_path <- sprintf(config::get('paths_templates')$graph, title)
-  png(file = file_path, width = width, height = height, res = res)
-  print(plot)
-  dev.off()
 }
 
 
