@@ -1,16 +1,18 @@
 ########################################################################
-# This script is meant to check how well our models performed when 
-#  trained only on the list of contributing features found by the full
-#  pipeline.
+# This script is meant to check how well our models perform when 
+#  trained only on the list of "contributing features".
+# 
+# We define "contributing features" as features selected by the feature
+#  selection process at least 50% of the time (over repeated folds),
+#  and having an importance p value below a threshold.
+# 
 # This script can be run only after ml_pipeline ran on all datasets and 
 #  functions from postprocess_results.R were used to combine all results 
 #  and save a list of contributors only (per dataset, per run_name.. 
 #  saved in config::get("paths")$contributors_list).
-# If these models perform comparably good as the previous ones, we infer
-#  that our list of contributors indeed covers all informative features.
 ########################################################################
 
-# Patch to load ml_pipeline functions without running the main function there
+# Patch to load ml_pipeline functions without running the "main"
 if (!exists("name__")) {
   name__ = "ml_pipeline_contrib_only"
 }
