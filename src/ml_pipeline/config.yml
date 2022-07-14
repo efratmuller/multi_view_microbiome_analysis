@@ -22,7 +22,7 @@ default:
     'ml_input_dir': '../../data/ml_input',
     'ml_output_dir': '../../data/ml_output',
     'results_tables_dir': '../../data/ml_output/results_tables',
-    'logs_dir': '../../data/ml_output/logs',
+    'logs_dir': '../../data/ml_output/logs', # Relevant for run_pipeline_parallel.R only
     'metacyc_pathways_names': '../../db/metacyc/metacyc_pathways_names.tsv',
     'kegg_metabolites_names': '../../db/kegg/kegg_metabolites_names.tsv',
     'metacyc_pathways_hierarchy': '../../db/metacyc/metacyc_pathway_db.txt',
@@ -38,7 +38,7 @@ default:
     'pathways': '../../data/ml_input/%s/pathways.tsv',
     'metabolites': '../../data/ml_input/%s/cmp_metabolites_kegg2021.tsv',
     'metagenome': '../../data/ml_input/%s/KO_metagenome_unstrat.tsv',
-    'log': '../../data/ml_output/logs/%s_ml_pipeline.log',
+    'log': '../../data/ml_output/logs/%s_ml_pipeline.log', # Relevant for run_pipeline_parallel.R only
     'clusters': '../../data/ml_output/results_tables/%s_clusters.csv',
     'feature_importance_csv': '../../data/ml_output/results_tables/%s_feature_importance.csv',
     'cv_results_csv': '../../data/ml_output/results_tables/%s_pipeline.csv',
