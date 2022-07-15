@@ -28,3 +28,4 @@ vignettes/*.pdf
 
 # Others
 data/ml_input/*
+src/ml_pipeline/slurm.batch.txt
