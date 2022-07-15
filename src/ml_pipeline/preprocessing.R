@@ -125,13 +125,13 @@ prep_convert_to_relative_abundances <- function(df) {
 }
 
 
-prep_sanitize_dataset <- function(df, feature_set, rare_feature_cutoff = 0.1) {
+prep_sanitize_dataset <- function(df, feature_set, rare_feature_cutoff = 0.2) {
   original_nfeatures <- ncol(df)
   
   # Remove constant features
   df <- df %>% select(where(~ n_distinct(.) > 1))
   
-  # Remove rare features (have <10% non-zero values)
+  # Remove rare features (have <20% non-zero values)
   # Note: this means we use a prevalence filter only, regardless of abundance
   non_zero_percentage <- colSums(df != 0) / nrow(df)
   rare_features <- names(non_zero_percentage[non_zero_percentage <= rare_feature_cutoff])
