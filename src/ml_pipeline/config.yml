@@ -90,7 +90,7 @@ contributors:
   params_combo: {
     'should_tune': [false],
     'fs_type': ['contribsOnly'],
-    'feature_set_type': ['T','G','P','M','T+G','T+M','T+G+P+M']
+    'feature_set_type': ['T','G','P','M','T+G+M','T+P+M','T+G+P+M']
   }
   paths_templates: {
     'log': '../../data/ml_output/logs/%s_ml_pipeline_contribs_only.log',

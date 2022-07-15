@@ -18,7 +18,7 @@ if (!exists("name__")) {
 }
 source('ml_pipeline.R')
 
-# Run pipeline using contributors only for all datasets available
+# Run pipeline using contributors only for all available datasets
 # TODO: parallelize
 # TODO: no need to re-write the clusters file (for now marked with REDUNDANT suffix)
 run_pipeline_contribsOnly_in_parallel <- function() {

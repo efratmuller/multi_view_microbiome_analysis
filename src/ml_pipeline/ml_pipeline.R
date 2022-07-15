@@ -424,8 +424,20 @@ ml_main <- function(ds_name) {
 # Parse command line arguments
 ml_parse_args <- function() {
   option_list <- list(
-    make_option(c("-d", "--dataset"), type = "character", default = NULL, 
-                help = "dataset name", metavar = "character")
+    make_option(
+      c("-d", "--dataset"), 
+      type = "character", 
+      default = NULL, 
+      help = "dataset name", 
+      metavar = "character"
+    ),
+    make_option(
+      c("-w", "--work_dir"), 
+      type = "character", 
+      default = getwd(), 
+      help = "working directory (should be set to the ml_pipeline directory)", 
+      metavar = "character"
+    )
   ); 
   
   opt_parser <- OptionParser(option_list = option_list);
@@ -438,14 +450,14 @@ ml_parse_args <- function() {
 ###################################
 
 if (name__ == "ml_pipeline") {
+  # Parse arguments (will take default values if none given)
+  args <- ml_parse_args()
+  
   # Set working directory 
-  setwd(getwd())
+  setwd(args$work_dir)
   
   # Set log level (globally)
   log_threshold(config::get('log_level'))
-  
-  # Parse arguments (will take default values if none given)
-  args <- ml_parse_args()
   
   # The ML pipeline could be executed in a few different ways:
   # Option 1: User specifies a dataset to run on using the "-d" command line argument
