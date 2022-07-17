@@ -44,8 +44,8 @@ if (name__ == "ml_pipeline_contrib_only") {
   run_pipeline_contribsOnly_in_parallel()
 }
 
+# For testing
 if (FALSE) {
-  # For testing
   ml_main('t1d_alkanani')
   ml_main('crc_wang') 
   ml_main('crc_zeller') 

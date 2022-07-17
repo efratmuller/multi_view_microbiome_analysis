@@ -6,6 +6,7 @@ default:
   tuning_n_repeats: 2
   use_tune_grid: false                                    # If true, uses grid-search for hyperparameter tuning. Otherwise uses Bayes
   cluster_type: 'clustering99'                            # Can also be: "none"
+  ranger_n_threads: 4
   params_combo: {
     'should_tune': [false],
     'fs_type': ['none', 'Boruta90', 'Boruta80', 'utest'],
@@ -42,6 +43,7 @@ default:
     'clusters': '../../data/ml_output/results_tables/%s_clusters.csv',
     'feature_importance_csv': '../../data/ml_output/results_tables/%s_feature_importance.csv',
     'cv_results_csv': '../../data/ml_output/results_tables/%s_pipeline.csv',
+    'raw_oof_predictions': '../../data/ml_output/results_tables/%s_oof_predictions.csv',
     'cross_ds_dir': '../../data/ml_output/results_tables/cross_%s',  # group_name
     'cross_results_csv': '../../data/ml_output/results_tables/cross_%s/%s___%s__results.csv',  # group, train, test
     'cross_clusters': '../../data/ml_output/results_tables/cross_%s/%s___%s__clusters.csv', # group, train, test
@@ -96,11 +98,12 @@ contributors:
     'log': '../../data/ml_output/logs/%s_ml_pipeline_contribs_only.log',
     'clusters': '../../data/ml_output/results_tables_new_feature_sets/%s_clusters_contribs_only_REDUNDANT.csv',
     'feature_importance_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_contribs_only_feature_importance.csv',
-    'cv_results_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_contribs_only_pipeline.csv'
+    'cv_results_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_contribs_only_pipeline.csv',
+    'raw_oof_predictions': '../../data/ml_output/results_tables/%s_contribs_only_oof_predictions.csv'
   }
   
 test:
-  outer_n_repeats: 3
+  outer_n_repeats: 1
   outer_n_folds: 5
   params_combo: {
     'should_tune': [false],

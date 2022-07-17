@@ -1,10 +1,50 @@
+########################################################################
+# This script contains the entire machine learning (RF) pipeline. 
+# 
+# This script can be run via command line for one specific dataset
+#  (present in ml_input folder) using the '-d' option, or manually run 
+#  on several datasets. All important configurations are located in the
+#  config.yml file in the same folder.
+########################################################################
+
 library(config)
 library(tidymodels)
 library(parallel)
 library(optparse)
 
+# Parse command line arguments
+ml_parse_args <- function() {
+  option_list <- list(
+    make_option(
+      c("-d", "--dataset"), 
+      type = "character", 
+      default = NULL, 
+      help = "dataset name", 
+      metavar = "character"
+    ),
+    make_option(
+      c("-w", "--work_dir"), 
+      type = "character", 
+      default = getwd(), 
+      help = "working directory (should be set to the ml_pipeline directory)", 
+      metavar = "character"
+    )
+  ); 
+  
+  opt_parser <- OptionParser(option_list = option_list);
+  opts <- parse_args(opt_parser);
+  return(opts)
+}
+
 if (!exists("name__")) {
+  # Indicates the script was ran directly (and not sourced by another)
   name__ = "ml_pipeline"
+  
+  # Parse arguments (will take default values if none given)
+  args <- ml_parse_args()
+  
+  # Set working directory 
+  setwd(args$work_dir)
 }
 
 source('utils.R')
@@ -13,10 +53,12 @@ source('feature_selection.R')
 source('clustering.R')
 source('postprocess_results.R')
 
-# Creates a random forest model specification (using the tidymodels framework).
-# If configured to run tuning, classifier hyper-parameters are tuned here,
-#  otherwise, default hyper-parameters are used.
-# (Model is not trained here)
+# Creates a random forest model specification 
+#  (using the tidymodels framework).
+# If configured to run tuning, classifier hyper-
+#  parameters are tuned here, otherwise, default 
+#  hyper-parameters are used.
+# Note: the model is not trained here, just defined.
 ml_create_rf_model <- function(run_name,
                                train_df,
                                should_tune) {
@@ -40,7 +82,11 @@ ml_create_rf_model <- function(run_name,
                              trees = 500,
                              min_n = tune()) %>%
       set_mode("classification") %>%
-      set_engine("ranger", importance = "permutation")
+      set_engine(
+        "ranger", 
+        importance = "permutation", 
+        num.threads = config::get('ranger_n_threads')
+      )
     
     data_workflow <- workflow() %>%
       add_recipe(data_recipe) %>%
@@ -76,9 +122,14 @@ ml_create_rf_model <- function(run_name,
   } else {
     logs[['mean_inner_cv_auc_best_tuning_params']] <- NA
     
-    final_rf <- rand_forest(mode = "classification", min_n = 5) %>%
+    final_rf <- 
+      rand_forest(mode = "classification", min_n = 7) %>%
       set_mode("classification") %>%
-      set_engine("ranger", importance = "permutation")
+      set_engine(
+        "ranger", 
+        importance = "permutation", 
+        num.threads = config::get("ranger_n_threads")
+      )
   }
   
   return(list(
@@ -131,24 +182,27 @@ ml_evaluate_test <- function(run_name,
                              test_df) {
   logs = list()
   
+  # Will automatically "bake" as the recipe is in the workflow
   set.seed(666)
-  
-  # Will automatically bake since the recipe is in the workflow
   final_result <-
     predict(fitted_wf, new_data = test_df, type = 'prob') %>%
     bind_cols(test_df)
   
   out_of_fold_test_auc <- final_result %>%
     roc_auc(DiseaseState, .pred_disease)
-  
   logs[['out_of_fold_test_auc']] <- out_of_fold_test_auc$.estimate
   
+  # Save predictions for later ROC-AUC plotting
+  oof_preds <- final_result %>%
+    select(DiseaseState, .pred_disease) %>%
+    rename(label = DiseaseState)  
+    
   # plot <- final_result %>%
   #   roc_curve(DiseaseState, .pred_disease) %>%
   #   autoplot() +
   #   ggtitle(sprintf('%s - ROC curve', run_name))
   
-  return(list(logs = logs))
+  return(list(logs = logs, oof_preds = oof_preds))
 }
 
 
@@ -164,13 +218,15 @@ ml_select_features <- function(train_df,
     round(train_df %>% 
             filter(DiseaseState == 'healthy') %>% 
             nrow() /
-            nrow(train_df), 3)
+            nrow(train_df), 
+          3)
   
   logs[['h_ratio_test']] <-
     round(test_df %>% 
             filter(DiseaseState == 'healthy') %>% 
             nrow() /
-            nrow(test_df), 3)
+            nrow(test_df), 
+          3)
   
   log_trace("H ratio train: {logs[['h_ratio_train']]}, H ratio test: {logs[['h_ratio_test']]}")
   logs[['n_features_origin']] <- ncol(train_df) - 1
@@ -250,8 +306,8 @@ ml_outer_fold_iteration <- function(run_name,
   train_df <- results$train_df
   test_df <- results$test_df
   
-  # Less than 2 features (3 columns including DiseaseState) is problematic
-  # for pvalue calculation
+  # Less than 2 features (3 columns including DiseaseState) 
+  #  is problematic for pvalue calculation
   if (ncol(train_df) < 3) {
     log_warn("Not enough features to train a model")
     return(list(logs = logs, feature_importance = list()))
@@ -273,12 +329,13 @@ ml_outer_fold_iteration <- function(run_name,
   # Evaluate model on test data
   results <- ml_evaluate_test(run_name, fitted_wf, test_df)
   logs <- c(logs, results$logs)
+  oof_preds <- results$oof_preds
   
-  return(list(logs = logs, feature_importance = feature_importance))
+  return(list(logs = logs, oof_preds = oof_preds, feature_importance = feature_importance))
 }
 
 # Run the machine learning pipeline on a specific dataset
-#  and a specific feature type
+#  + a specific feature type
 ml_pipeline_single_run <- function(run_name,
                                    data_df,
                                    should_cv = TRUE,
@@ -306,7 +363,6 @@ ml_pipeline_single_run <- function(run_name,
   logs[['n_folds_total']] <- nrow(folds)
   
   # Run the CV
-  all_feature_importances = tibble()
   cv_results <- lapply(folds$splits, function(split) {
     fold_id <- paste(split$id, collapse = " ")
     
@@ -322,19 +378,22 @@ ml_pipeline_single_run <- function(run_name,
   
     return(list(
       logs = c(fold_id = fold_id, results$logs),
+      oof_preds = bind_cols(results$oof_preds, fold_id = fold_id),
       feature_importance = bind_cols(results$feature_importance, fold_id = fold_id)
     ))
   })
   
-  # Flat the results into a single object
+  # Combine results into these tables
   cv_results <- do.call('rbind', cv_results) %>% as_tibble
   cv_feature_importance <- bind_rows(cv_results$feature_importance)
+  cv_oof_preds <- bind_rows(cv_results$oof_preds)
   cv_logs <- bind_rows(cv_results$logs)
   
   # Pack the results
   results <- tibble_row(!!!logs)
   results$cv_results <- list(cv_logs)
   results$mean_out_of_fold_test_auc <- mean(cv_logs$out_of_fold_test_auc)
+  results$oof_preds <- list(cv_oof_preds)
   results$feature_importance <- list(cv_feature_importance)
 
   log_info("Mean out of fold test AUC: {results$mean_out_of_fold_test_auc}")
@@ -379,7 +438,7 @@ ml_main <- function(ds_name) {
     run_name <- ml_build_run_name(params_combo)
     
     # Set the parameters for the pipeline
-    func_params = list(
+    func_params <- list(
       run_name = paste0(ds_name, ' - ', run_name),
       data_df = feature_sets[[params_combo[['feature_set_type']]]],
       should_tune = params_combo[['should_tune']],
@@ -390,6 +449,7 @@ ml_main <- function(ds_name) {
     
     results <- do.call('ml_pipeline_single_run', func_params)
     
+    # Add some additional columns to the result table
     results$run_name = run_name
     results$feature_set_type = params_combo[['feature_set_type']]
     results$should_tune = params_combo[['should_tune']]
@@ -401,13 +461,15 @@ ml_main <- function(ds_name) {
   # Save a CSV file with the folds results
   result_path <- sprintf(config::get('paths_templates')$cv_results_csv, ds_name)
   
-  all_results %>% 
+  all_cv_results <-
+    all_results %>% 
     mutate(dataset = ds_name) %>%
     relocate(dataset) %>%
     select(-feature_importance) %>%
     unnest(cols = cv_results) %>%
-    mutate(run_name = paste0('+"', run_name, '"')) %>%  # so that excel won't show this as a formula
-    utils_save_tsv_table(result_path, sep = ',')
+    mutate(run_name = paste0('+"', run_name, '"')) # so that excel won't show this as a formula
+  
+  utils_save_tsv_table(all_cv_results, result_path, sep = ',')
   
   # Save a CSV file with features importance
   feature_importance_path <- sprintf(config::get('paths_templates')$feature_importance_csv, ds_name)
@@ -419,43 +481,29 @@ ml_main <- function(ds_name) {
     unnest(cols = feature_importance) %>%
     mutate(run_name = paste0('+"', run_name, '"')) %>%  # so that excel won't show this as a formula
     utils_save_tsv_table(`feature_importance_path`, sep = ',')
+  
+  # Save a CSV file with out-of-fold raw predictions (for ROC plotting)
+  oof_preds_path <- sprintf(config::get('paths_templates')$raw_oof_predictions, ds_name)
+  
+  all_results %>% 
+    mutate(dataset = ds_name) %>%
+    select(c(dataset, feature_set_type, run_name, oof_preds)) %>%
+    unnest(cols = oof_preds) %>%
+    relocate(dataset, feature_set_type, fold_id, run_name) %>%
+    mutate(run_name = paste0('+"', run_name, '"')) %>%  # so that excel won't show this as a formula
+    left_join(all_cv_results %>% select(dataset, feature_set_type, fold_id, run_name, h_ratio_train), 
+              by = c("dataset", "feature_set_type", "fold_id", "run_name")) %>%
+    mutate(.pred_naive = 1 - h_ratio_train) %>%
+    select(-h_ratio_train) %>%
+    utils_save_tsv_table(oof_preds_path, sep = ',')
 }
 
-# Parse command line arguments
-ml_parse_args <- function() {
-  option_list <- list(
-    make_option(
-      c("-d", "--dataset"), 
-      type = "character", 
-      default = NULL, 
-      help = "dataset name", 
-      metavar = "character"
-    ),
-    make_option(
-      c("-w", "--work_dir"), 
-      type = "character", 
-      default = getwd(), 
-      help = "working directory (should be set to the ml_pipeline directory)", 
-      metavar = "character"
-    )
-  ); 
-  
-  opt_parser <- OptionParser(option_list = option_list);
-  opts <- parse_args(opt_parser);
-  return(opts)
-}
 
 ###################################
 # Main 
 ###################################
 
 if (name__ == "ml_pipeline") {
-  # Parse arguments (will take default values if none given)
-  args <- ml_parse_args()
-  
-  # Set working directory 
-  setwd(args$work_dir)
-  
   # Set log level (globally)
   log_threshold(config::get('log_level'))
   
