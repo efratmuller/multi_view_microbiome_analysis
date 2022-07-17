@@ -465,7 +465,7 @@ ml_main <- function(ds_name) {
     all_results %>% 
     mutate(dataset = ds_name) %>%
     relocate(dataset) %>%
-    select(-feature_importance) %>%
+    select(-feature_importance, -oof_preds) %>%
     unnest(cols = cv_results) %>%
     mutate(run_name = paste0('+"', run_name, '"')) # so that excel won't show this as a formula
   
