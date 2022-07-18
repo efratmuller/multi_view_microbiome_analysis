@@ -503,35 +503,29 @@ ml_main <- function(ds_name) {
 # Main 
 ###################################
 
+# Running the ML pipeline on a specific dataset, using the "-d" command line argument
+# -----------------------------------------------------------------------------------
 if (name__ == "ml_pipeline") {
   # Set log level (globally)
   log_threshold(config::get('log_level'))
-  
-  # The ML pipeline could be executed in a few different ways:
-  # Option 1: User specifies a dataset to run on using the "-d" command line argument
-  # ----------------------------------------------------------------------------------
-  if (!is.null(args$dataset)) {
-    
-    ml_main(args$dataset)
-    
-    # Option 2: Run in test mode (i.e. use 'test' configuration)
-    # ----------------------------------------------------------------------------------
-  } else {
-    
-    Sys.setenv(R_CONFIG_ACTIVE = "test")  # Set to test configuration mode globally (i.e. use 'test' configurations in config.yml)
-    log_info('Running with test configuration...')
-    ml_main('crc_wang') 
-    ml_main('crc_zeller') 
-    ml_main('t1d_alkanani') 
-    ml_main('crc_zeller_2014') 
-    ml_main('adenomas_feng_2015') 
-    ml_main('esrd_wang_2020') 
-    ml_main('uc_franzosa_2019')
-    ml_main('cd_franzosa_2019')
-    post_prepare_rdata()
-    post_save_contributors()
-  }
-  
-  # Option 3: Run on a list of datasets/settings in parallel. 
-  # For this use the 'run_pipeline_parallel.R' script.
+  if (!is.null(args$dataset)) ml_main(args$dataset)
 }
+
+# Run manually, in test mode (i.e. use the 'test' configuration)
+# -----------------------------------------------------------------------------------
+if (FALSE) {
+  log_threshold(config::get('log_level'))
+  Sys.setenv(R_CONFIG_ACTIVE = "test")  # Set to test configuration mode globally (i.e. use 'test' configurations in config.yml)
+  log_info('Running with test configuration...')
+  ml_main('crc_zeller') 
+  ml_main('t1d_alkanani') 
+  ml_main('crc_zeller_2014') 
+  ml_main('adenomas_feng_2015') 
+  ml_main('esrd_wang_2020') 
+  ml_main('uc_franzosa_2019')
+  ml_main('cd_franzosa_2019')
+  post_prepare_rdata()
+  post_save_contributors()
+}
+  
+# To run the pipeline on all datasets, in parallel, use the 'run_pipeline_parallel.R' script.
