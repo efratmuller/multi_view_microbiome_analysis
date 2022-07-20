@@ -21,8 +21,9 @@ source('ml_pipeline.R')
 # Run pipeline using contributors only for all available datasets
 # TODO: parallelize
 # TODO: no need to re-write the clusters file (for now marked with REDUNDANT suffix)
-run_pipeline_contribsOnly_in_parallel <- function() {
-  dataset_names <- utils_get_available_ds()
+run_pipeline_contribs_only <- function(dataset_names = NULL) {
+  if (is.null(dataset_names)) 
+    dataset_names <- utils_get_available_ds()
   dummy <- lapply(dataset_names, ml_main)
 }
 
@@ -41,19 +42,20 @@ Sys.setenv(R_CONFIG_ACTIVE = "contributors")
 
 # Run pipeline on all datasets, by default - all datasets found in the ml_input package
 if (name__ == "ml_pipeline_contrib_only") {
-  run_pipeline_contribsOnly_in_parallel()
+  run_pipeline_contribs_only()
 }
 
 # For testing
 if (FALSE) {
-  ml_main('t1d_alkanani')
-  ml_main('crc_wang') 
-  ml_main('crc_zeller') 
-  ml_main('crc_zeller_2014') 
-  ml_main('adenomas_feng_2015') 
-  ml_main('esrd_wang_2020') 
-  ml_main('uc_franzosa_2019')
-  ml_main('cd_franzosa_2019')
+  run_pipeline_contribs_only(
+    c('crc_zeller', 
+      't1d_alkanani', 
+      'crc_zeller_2014', 
+      'adenomas_feng_2015', 
+      'esrd_wang_2020', 
+      'uc_franzosa_2019',
+      'cd_franzosa_2019')
+  )
   post_prepare_rdata()
 }
 

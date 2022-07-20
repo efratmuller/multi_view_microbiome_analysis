@@ -92,21 +92,21 @@ contributors:
   params_combo: {
     'should_tune': [false],
     'fs_type': ['contribsOnly'],
-    'feature_set_type': ['T','G','P','M','T+G+M','T+P+M','T+G+P+M']
+    'feature_set_type': ['T','G','P','M','T+P+M','T+G+P+M']
   }
   paths_templates: {
     'log': '../../data/ml_output/logs/%s_ml_pipeline_contribs_only.log',
-    'clusters': '../../data/ml_output/results_tables_new_feature_sets/%s_clusters_contribs_only_REDUNDANT.csv',
-    'feature_importance_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_contribs_only_feature_importance.csv',
-    'cv_results_csv': '../../data/ml_output/results_tables_new_feature_sets/%s_contribs_only_pipeline.csv',
+    'clusters': '../../data/ml_output/results_tables/%s_clusters_contribs_only_REDUNDANT.csv',
+    'feature_importance_csv': '../../data/ml_output/results_tables/%s_contribs_only_feature_importance.csv',
+    'cv_results_csv': '../../data/ml_output/results_tables/%s_contribs_only_pipeline.csv',
     'raw_oof_predictions': '../../data/ml_output/results_tables/%s_contribs_only_oof_predictions.csv'
   }
   
 test:
-  outer_n_repeats: 1
+  outer_n_repeats: 2
   outer_n_folds: 5
   params_combo: {
     'should_tune': [false],
     'fs_type': ['Boruta90'],
-    'feature_set_type': ['T','G','P','M','T+G+P+M']
+    'feature_set_type': ['T','G','P','M','T+P+M','T+G+P+M']
   }
