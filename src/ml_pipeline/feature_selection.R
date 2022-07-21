@@ -36,9 +36,9 @@ fs_boruta <- function(data_df, quantileThresh = 0.8) {
 
 
 fs_utest <- function(data_df,
-                     thresh_type = 'pvalue',
+                     thresh_type = 'percentage',
                      thresh_pvalue = 0.1,
-                     thresh_percentage = 0.2,
+                     thresh_percentage = 0.1,
                      thresh_count = 30,
                      fallback = FALSE) {
   logs <- list()
