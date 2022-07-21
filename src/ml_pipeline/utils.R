@@ -45,7 +45,7 @@ utils_get_kegg_compound_names_mapping <- function() {
   # If there are several names, take the first
   kegg_metab_names <- kegg_metab_names %>%
     rename(all_names = name) %>%
-    separate(all_names, 
+    tidyr::separate(all_names, 
              into = c("name"), 
              sep = ";", 
              remove = FALSE, 
