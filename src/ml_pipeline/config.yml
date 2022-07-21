@@ -10,7 +10,7 @@ default:
   params_combo: {
     'should_tune': [false],
     'fs_type': ['none', 'Boruta90', 'Boruta80', 'utest'],
-    'feature_set_type': ['T','G','P','M','T+G+M','T+P+M','T+G+P+M']
+    'feature_set_type': ['T','G','P','M','T+G+M','T+G+P+M']
   }
   disease_labels: ['ASD', 'CD', 'CDI', 'nonCDI', 'CIRR', 'CRC', 'EDD', 'HIV',
     'MHE', 'NASH', 'OB', 'PAR', 'PSA', 'RA', 'T1D', 'T2D', 'UC',
