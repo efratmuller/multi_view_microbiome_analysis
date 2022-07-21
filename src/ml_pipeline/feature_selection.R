@@ -38,7 +38,7 @@ fs_boruta <- function(data_df, quantileThresh = 0.8) {
 fs_utest <- function(data_df,
                      thresh_type = 'percentage',
                      thresh_pvalue = 0.1,
-                     thresh_percentage = 0.1,
+                     thresh_percentage = 0.2,
                      thresh_count = 30,
                      fallback = FALSE) {
   logs <- list()
@@ -145,6 +145,7 @@ fs_select_features <- function(train_df,
   # If no features were selected, take all the features
   if (ncol(filtered_data) == 1) {
     filtered_data <- train_df
+    log_warn("0 features selected by feature selection. Taking all features instead.")
   }
   
   # Match the test data to have the same features as the train data
