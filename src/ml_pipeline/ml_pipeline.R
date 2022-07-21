@@ -392,7 +392,7 @@ ml_pipeline_single_run <- function(run_name,
   # Pack the results
   results <- tibble_row(!!!logs)
   results$cv_results <- list(cv_logs)
-  results$mean_out_of_fold_test_auc <- mean(cv_logs$out_of_fold_test_auc)
+  results$mean_out_of_fold_test_auc <- mean(cv_logs$out_of_fold_test_auc, na.rm = TRUE)
   results$oof_preds <- list(cv_oof_preds)
   results$feature_importance <- list(cv_feature_importance)
 
